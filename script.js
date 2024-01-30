@@ -1,16 +1,23 @@
 let fields = [
-    null, // 0
-    null, // 1
-    null, // 2
-    null, // 3
-    null, // 4
-    null, // 5
-    null, // 6
-    null, // 7
-    null // 8
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
 ];
 
-let currentPlayer = 'circle'; // Start with 'circle'
+const WINNING_COMBINATIONS = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8], // horizontal
+    [0, 3, 6], [1, 4, 7], [2, 5, 8], // vertical
+    [0, 4, 8], [2, 4, 6], // diagonal
+];
+
+let currentPlayer = 'circle';
+
 
 function init() {
     render();
@@ -20,126 +27,134 @@ function render() {
     const contentDiv = document.getElementById('content');
 
     // Generate table HTML
-    let tableHTML = '<table>';
+    let tableHtml = '<table>';
     for (let i = 0; i < 3; i++) {
-        tableHTML += `<tr>`;
+        tableHtml += '<tr>';
         for (let j = 0; j < 3; j++) {
             const index = i * 3 + j;
             let symbol = '';
-            if (fields[index] === 'circle' || fields[index] === 'cross') {
-                symbol = generateSymbolSVG(fields[index]);
+            if (fields[index] === 'circle') {
+                symbol = generateCircleSVG();
+            } else if (fields[index] === 'cross') {
+                symbol = generateCrossSVG();
             }
-            tableHTML += `<td onclick="handleClick(${index})">${symbol}</td>`;
+            tableHtml += `<td onclick="handleClick(this, ${index})">${symbol}</td>`;
         }
-        tableHTML += `</tr>`;
+        tableHtml += '</tr>';
     }
-    tableHTML += `</table>`;
+    tableHtml += '</table>';
 
     // Set table HTML to contentDiv
-    contentDiv.innerHTML = tableHTML;
+    contentDiv.innerHTML = tableHtml;
 }
 
-// Function to handle the click event
-function handleClick(index) {
-    // Check if the field is already occupied
+function restartGame(){
+    fields = [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+    ];
+    render();
+}
+
+function handleClick(cell, index) {
     if (fields[index] === null) {
-        // Set the field with the current player's symbol
         fields[index] = currentPlayer;
+        cell.innerHTML = currentPlayer === 'circle' ? generateCircleSVG() : generateCrossSVG();
+        cell.onclick = null;
+        currentPlayer = currentPlayer === 'circle' ? 'cross' : 'circle';
 
-        // Update the content of the clicked element
-        const clickedElement = document.querySelector(`#content table tr:nth-child(${Math.floor(index / 3) + 1}) td:nth-child(${index % 3 + 1})`);
-        clickedElement.innerHTML = generateSymbolSVG(currentPlayer);
-
-        // Remove the onclick function of the clicked element
-        clickedElement.removeAttribute('onclick');
-
-        // Switch to the next player
-        currentPlayer = (currentPlayer === 'circle') ? 'cross' : 'circle';
+        if (isGameFinished()) {
+            const winCombination = getWinningCombination();
+            drawWinningLine(winCombination);
+        }
     }
 }
 
-function generateSymbolSVG(symbol) {
-    // Generate SVG code based on the given symbol ('circle' or 'cross')
-    return (symbol === 'circle') ? generateCircleSVG() : generateCrossSVG();
+function isGameFinished() {
+    return fields.every((field) => field !== null) || getWinningCombination() !== null;
 }
+
+function getWinningCombination() {
+    for (let i = 0; i < WINNING_COMBINATIONS.length; i++) {
+        const [a, b, c] = WINNING_COMBINATIONS[i]; // [0, 1, 2]
+        if (fields[a] === fields[b] && fields[b] === fields[c] && fields[a] !== null) {
+            return WINNING_COMBINATIONS[i];
+        }
+    }
+    return null;
+}
+
 
 function generateCircleSVG() {
-    const width = 80;
-    const height = 80;
-    const color = "#00B0EF";
-    const animationDuration = 125;
-
-    const radius = width / 2 - 5;
-    const circumference = 2 * Math.PI * radius;
-
-    const svgCode = `
-        <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;">
-            <circle cx="${width / 2}" cy="${height / 2}" r="${radius}" fill="transparent" stroke="${color}" stroke-width="5"
-                stroke-dasharray="${circumference}" stroke-dashoffset="${circumference}">
-                <animate attributeName="stroke-dashoffset" values="${circumference};0" dur="${animationDuration}ms" keyTimes="0;1" begin="0s" repeatCount="1" fill="freeze" />
-            </circle>
-        </svg>
-    `;
-
-    return svgCode;
-}
-
-function generateCrossSVG() {
+    const color = '#00B0EF';
     const width = 70;
     const height = 70;
-    const color = "#FFC000";
-    const animationDuration = 125;
 
-    const svgCode = `
-        <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;">
-            <!-- Diagonale Linie des Kreuzes (von links oben nach rechts unten) -->
-            <line x1="0" y1="0" x2="${width}" y2="${height}" stroke="${color}" stroke-width="5">
-                <animate attributeName="x2" values="0;${width}" dur="${animationDuration}ms" keyTimes="0;1" begin="0s" repeatCount="1" fill="freeze" />
-                <animate attributeName="y2" values="0;${height}" dur="${animationDuration}ms" keyTimes="0;1" begin="0s" repeatCount="1" fill="freeze" />
-            </line>
+    return `<svg width="${width}" height="${height}">
+              <circle cx="35" cy="35" r="30" stroke="${color}" stroke-width="5" fill="none">
+                <animate attributeName="stroke-dasharray" from="0 188.5" to="188.5 0" dur="0.2s" fill="freeze" />
+              </circle>
+            </svg>`;
+}
 
-            <!-- Diagonale Linie des Kreuzes (von links unten nach rechts oben) -->
-            <line x1="0" y1="${height}" x2="${width}" y2="0" stroke="${color}" stroke-width="5">
-                <animate attributeName="x2" values="0;${width}" dur="${animationDuration}ms" keyTimes="0;1" begin="0s" repeatCount="1" fill="freeze" />
-                <animate attributeName="y2" values="${height};0" dur="${animationDuration}ms" keyTimes="0;1" begin="0s" repeatCount="1" fill="freeze" />
-            </line>
-        </svg>
+
+function generateCrossSVG() {
+    const color = '#FFC000';
+    const width = 70;
+    const height = 70;
+
+    const svgHtml = `
+      <svg width="${width}" height="${height}">
+        <line x1="0" y1="0" x2="${width}" y2="${height}"
+          stroke="${color}" stroke-width="5">
+          <animate attributeName="x2" values="0; ${width}" dur="200ms" />
+          <animate attributeName="y2" values="0; ${height}" dur="200ms" />
+        </line>
+        <line x1="${width}" y1="0" x2="0" y2="${height}"
+          stroke="${color}" stroke-width="5">
+          <animate attributeName="x2" values="${width}; 0" dur="200ms" />
+          <animate attributeName="y2" values="0; ${height}" dur="200ms" />
+        </line>
+      </svg>
     `;
 
-    return svgCode;
+    return svgHtml;
 }
 
-function checkWinStatus() {
-    // Check horizontal rows
-    for (let i = 0; i < 3; i++) {
-        if (fields[i * 3] === currentPlayer &&
-            fields[i * 3 + 1] === currentPlayer &&
-            fields[i * 3 + 2] === currentPlayer) {
-            return true; // Won in the i-th horizontal row
-        }
-    }
 
-    // Check vertical rows
-    for (let i = 0; i < 3; i++) {
-        if (fields[i] === currentPlayer &&
-            fields[i + 3] === currentPlayer &&
-            fields[i + 6] === currentPlayer) {
-            return true; // Won in the i-th vertical row
-        }
-    }
 
-    // Check diagonal rows
-    if (fields[0] === currentPlayer &&
-        fields[4] === currentPlayer &&
-        fields[8] === currentPlayer) {
-        return true; // Won in the main diagonal
-    }
-
-    if (fields[2] === currentPlayer &&
-        fields[4] === currentPlayer &&
-        fields[6] === currentPlayer) {
-        return true; // Won in the secondary diagonal
-    }
-
-    return false; // No win condition met
-}
+function drawWinningLine(combination) {
+    const lineColor = '#ffffff';
+    const lineWidth = 5;
+  
+    const startCell = document.querySelectorAll(`td`)[combination[0]];
+    const endCell = document.querySelectorAll(`td`)[combination[2]];
+    const startRect = startCell.getBoundingClientRect();
+    const endRect = endCell.getBoundingClientRect();
+  
+    const contentRect = document.getElementById('content').getBoundingClientRect();
+  
+    const lineLength = Math.sqrt(
+      Math.pow(endRect.left - startRect.left, 2) + Math.pow(endRect.top - startRect.top, 2)
+    );
+    const lineAngle = Math.atan2(endRect.top - startRect.top, endRect.left - startRect.left);
+  
+    const line = document.createElement('div');
+    line.style.position = 'absolute';
+    line.style.width = `${lineLength}px`;
+    line.style.height = `${lineWidth}px`;
+    line.style.backgroundColor = lineColor;
+    line.style.top = `${startRect.top + startRect.height / 2 - lineWidth / 2 - contentRect.top}px`;
+    line.style.left = `${startRect.left + startRect.width / 2 - contentRect.left}px`;
+    line.style.transform = `rotate(${lineAngle}rad)`;
+    line.style.transformOrigin = `top left`;
+    document.getElementById('content').appendChild(line);
+  }
+  
