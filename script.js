@@ -64,7 +64,6 @@ function generateSymbolSVG(symbol) {
 }
 
 function generateCircleSVG() {
-    // Variablen für Höhe, Breite und Farbe und Animationsdauer
     const width = 80;
     const height = 80;
     const color = "#00B0EF";
@@ -86,11 +85,10 @@ function generateCircleSVG() {
 }
 
 function generateCrossSVG() {
-    // Variablen für Breite, Höhe und Farbe und Animationsdauer
     const width = 70;
     const height = 70;
     const color = "#FFC000";
-    const animationDuration = 125; // Animation dauert 125ms
+    const animationDuration = 125;
 
     const svgCode = `
         <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;">
@@ -109,4 +107,39 @@ function generateCrossSVG() {
     `;
 
     return svgCode;
+}
+
+function checkWinStatus() {
+    // Check horizontal rows
+    for (let i = 0; i < 3; i++) {
+        if (fields[i * 3] === currentPlayer &&
+            fields[i * 3 + 1] === currentPlayer &&
+            fields[i * 3 + 2] === currentPlayer) {
+            return true; // Won in the i-th horizontal row
+        }
+    }
+
+    // Check vertical rows
+    for (let i = 0; i < 3; i++) {
+        if (fields[i] === currentPlayer &&
+            fields[i + 3] === currentPlayer &&
+            fields[i + 6] === currentPlayer) {
+            return true; // Won in the i-th vertical row
+        }
+    }
+
+    // Check diagonal rows
+    if (fields[0] === currentPlayer &&
+        fields[4] === currentPlayer &&
+        fields[8] === currentPlayer) {
+        return true; // Won in the main diagonal
+    }
+
+    if (fields[2] === currentPlayer &&
+        fields[4] === currentPlayer &&
+        fields[6] === currentPlayer) {
+        return true; // Won in the secondary diagonal
+    }
+
+    return false; // No win condition met
 }
